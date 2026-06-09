@@ -46,12 +46,12 @@ jobs:
        # SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       run: |
         echo "🔥 Main orchestrator app running..."
-        python "All Run app_1.py"
+        python "All Runapp_1.py"
 
     # 7. Safety Cleanup (Temporary space se file clear karna)
     - name: Secure Environment Wipe
       if: always()
       run: |
         echo "🗑️ Wiping converted temporary .py file from local space..."
-        rm -f "All Run app_1.py"
+        rm -f "All_Run_app_1.ipynb"
         echo "✨ Totally successful and storage cleared!"
