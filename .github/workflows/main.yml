@@ -2,8 +2,8 @@ name: Force Run My Automation App
 
 on:
   schedule:
-    - cron: '0 4 * * *' # Pakistan time subah 9:00 AM
-  workflow_dispatch: # Manual run ka button
+    - cron: '0 4 * * *' # Pakistan Standard Time (PKT) ke mutabiq rozana subah 9:00 AM
+  workflow_dispatch: # Manual run karne ke liye button
 
 jobs:
   run-automation:
@@ -33,17 +33,21 @@ jobs:
         echo "🔄 Converting notebook to pure Python script..."
         jupyter nbconvert --to python *.ipynb
 
-    # 🔥 CRASH-PROOF STEP: Is line se get_ipython ka error hamesha ke liye bypass ho jayega
-    - name: Inject IPython Dummy Bypass
+    # Colab ke paths ko GitHub ke mutabiq change karna aur IPython bypass code inject karna
+    - name: Inject Fixes and Path Modifications
       run: |
-        echo "🛠️ Injecting IPython bypass into converted python file..."
-        # Yeh command script ki bilkul shuruat (Line 1) me fake get_ipython definition daal degi
+        echo "🛠️ Replacing Colab paths with GitHub workspace paths..."
+        # 1. Yeh line '/content/' path ko normal folder me convert karegi
+        sed -i "s|/content/||g" All_Run_app_1.py
+        sed -i "s|/content||g" All_Run_app_1.py
+        
+        # 2. Yeh line get_ipython ka error hamesha ke liye bypass karegi
         sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' All_Run_app_1.py
 
+    # 🔥 SINGLE SECRET STEP: Sirf DRIVE_URLS pass kiya hai
     - name: Execute Main Orchestrator Script
       env:
-        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
-       # SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        DRIVE_URLS: ${{ secrets.DRIVE_URLS }} # Sirf aik secret variable use ho raha hai
         PYTHONUNBUFFERED: "1"
       run: |
         echo "🔥 Executing the orchestrator application..."
