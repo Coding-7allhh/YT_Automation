@@ -23,29 +23,31 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ffmpeg
 
-    # Yahan humne network timeouts ko handle karne ke liye h11 aur cryptography packages add kiye hain
     - name: Install Required Packages
       run: |
         python -m pip install --upgrade pip
         pip install jupyter nbconvert supabase postgrest httpx moviepy gdown h11 cryptography
 
+    # STARTS HERE: Yeh step automatic har notebook dhoond kar convert karega
     - name: Convert Main Notebook to Python
       run: |
-        echo "🔄 Converting notebook into python..."
-        jupyter nbconvert --to python "All Run app_1.ipynb"
+        echo "🔄 Automatically finding and converting Jupyter Notebook..."
+        # Yeh command poori repository mein '*.ipynb' dhoondegi, naam ki galti nahi hogi
+        jupyter nbconvert --to python *.ipynb
 
-    # Python -u flag lagaya hai taake network errors line-by-line real-time show hon
     - name: Execute Main Orchestrator Script
       env:
         DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
-       # SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        #SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         PYTHONUNBUFFERED: "1"
       run: |
-        echo "🔥 Main orchestrator running..."
-        python -u "All Run app_1.py"
+        echo "🔥 Finding and executing the converted python script..."
+        # Yeh automatic bani hui .py file ko run kar degi chahe naam kuch bhi ho
+        python -u *.py
 
     - name: Secure Environment Wipe
       if: always()
       run: |
-        rm -f "All Run app_1.py"
+        echo "🗑️ Cleaning up temporary python files..."
+        rm -f *.py
         echo "✨ Environment cleaned up successfully!"
