@@ -1,4 +1,4 @@
-name: Daily Automated Jupyter Notebook Setup
+name: Force Run My Automation App
 
 on:
   schedule:
