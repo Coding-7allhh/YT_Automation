@@ -23,17 +23,18 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ffmpeg
 
+    # GitHub par hi saari requirements install kar rahe hain
     - name: Install Required Packages
       run: |
         python -m pip install --upgrade pip
-        pip install jupyter nbconvert supabase postgrest httpx moviepy gdown h11 cryptography
+        pip install jupyter nbconvert supabase postgrest httpx moviepy gdown h11 cryptography ipython
 
-    # STARTS HERE: Yeh step automatic har notebook dhoond kar convert karega
+    # 🔥 MAIN FIX HERE: Notebook ko convert karte waqt bash commands ko remove karna
     - name: Convert Main Notebook to Python
       run: |
-        echo "🔄 Automatically finding and converting Jupyter Notebook..."
-        # Yeh command poori repository mein '*.ipynb' dhoondegi, naam ki galti nahi hogi
-        jupyter nbconvert --to python *.ipynb
+        echo "🔄 Converting notebook and removing ipython notebook commands..."
+        # Yeh setting notebook ki sari '!' wali lines ko automatic code se saaf kar degi
+        jupyter nbconvert --to python --Exporter.default_preprocessors="['nbconvert.preprocessors.RegexRemovePreprocessor']" --RegexRemovePreprocessor.patterns="[\"^!.*\",\"^%.*\"]" *.ipynb
 
     - name: Execute Main Orchestrator Script
       env:
@@ -42,7 +43,6 @@ jobs:
         PYTHONUNBUFFERED: "1"
       run: |
         echo "🔥 Finding and executing the converted python script..."
-        # Yeh automatic bani hui .py file ko run kar degi chahe naam kuch bhi ho
         python -u *.py
 
     - name: Secure Environment Wipe
