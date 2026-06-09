@@ -23,27 +23,31 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ffmpeg
 
-    # GitHub par hi saari requirements install kar rahe hain
     - name: Install Required Packages
       run: |
         python -m pip install --upgrade pip
         pip install jupyter nbconvert supabase postgrest httpx moviepy gdown h11 cryptography ipython
 
-    # 🔥 MAIN FIX HERE: Notebook ko convert karte waqt bash commands ko remove karna
     - name: Convert Main Notebook to Python
       run: |
-        echo "🔄 Converting notebook and removing ipython notebook commands..."
-        # Yeh setting notebook ki sari '!' wali lines ko automatic code se saaf kar degi
-        jupyter nbconvert --to python --Exporter.default_preprocessors="['nbconvert.preprocessors.RegexRemovePreprocessor']" --RegexRemovePreprocessor.patterns="[\"^!.*\",\"^%.*\"]" *.ipynb
+        echo "🔄 Converting notebook to pure Python script..."
+        jupyter nbconvert --to python *.ipynb
+
+    # 🔥 CRASH-PROOF STEP: Is line se get_ipython ka error hamesha ke liye bypass ho jayega
+    - name: Inject IPython Dummy Bypass
+      run: |
+        echo "🛠️ Injecting IPython bypass into converted python file..."
+        # Yeh command script ki bilkul shuruat (Line 1) me fake get_ipython definition daal degi
+        sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' All_Run_app_1.py
 
     - name: Execute Main Orchestrator Script
       env:
         DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
-        #SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+       # SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         PYTHONUNBUFFERED: "1"
       run: |
-        echo "🔥 Finding and executing the converted python script..."
-        python -u *.py
+        echo "🔥 Executing the orchestrator application..."
+        python -u All_Run_app_1.py
 
     - name: Secure Environment Wipe
       if: always()
