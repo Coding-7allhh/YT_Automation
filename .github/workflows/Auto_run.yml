@@ -42,7 +42,7 @@ jobs:
     # 6. Converted Script ko Run karna (Supabase Secrets ke sath)
     - name: Execute Main Orchestrator Script
       env:
-       # SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
        # SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       run: |
         echo "🔥 Main orchestrator app running..."
