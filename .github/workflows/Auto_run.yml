@@ -1,1 +1,63 @@
 
+name: daily Automated Jupiter Notebook Setup
+
+on:
+  schedule:
+    # Pakistan Standard Time (PKT) ke mutabiq rozana subah 9:00 AM (Jo 4:00 AM UTC banta hai)
+    - cron: '0 4 * * *'
+  workflow_dispatch: # Manual chalane ke liye run button
+
+jobs:
+  run-automation:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. GitHub Repository Checkout
+    - name: Checkout Repository Code
+      uses: actions/checkout@v4
+
+    # 2. Python Environment Setup
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    # 3. Video Automation System Dependency (FFmpeg) Install karna
+    - name: Install FFmpeg System Dependency
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+
+    # 4. Notebook convert karne aur workflow chalane ki libraries
+    - name: Install Required Packages
+      run: |
+        python -m pip install --upgrade pip
+        pip install jupyter nbconvert supabase postgrest httpx moviepy
+
+    # 5. Notebook File ko direct Python Script (.py) me convert karna
+    - name: Convert Main Notebook to Python
+      run: |
+        echo "🔄 Converted Jupyter Notebook into pure Python script..."
+        # Yeh aapki main uploaded notebook ko script me convert kar degi
+        jupyter nbconvert --to python "All Run app_1.ipynb"
+
+    # 6. Converted Script ko Run karna aur os variable pass karna
+    - name: Execute Main Orchestrator Script
+      env:
+        # GitHub secrets se values aapke python ke 'os' module ko direct mil jayengi
+        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      run: |
+        echo "🔥 Main orchestrator app running..."
+        # .ipynb file convert hone ke baad .py ban chuki hai, ab usay run karenge
+        python "All Run app_1.py"
+
+    # 7. Safety Cleanup (GitHub khud space clean karega par hum confirm kar rahe hain)
+    - name: Secure Environment Wipe
+      if: always()
+      run: |
+        echo "🗑️ Wiping converted temporary .py file from local space..."
+        rm -f "All Run app_1.py"
+        echo "✨ Totally successful and storage cleared!"
