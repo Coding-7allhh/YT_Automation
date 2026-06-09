@@ -2,56 +2,50 @@ name: Force Run My Automation App
 
 on:
   schedule:
-    # Pakistan Standard Time (PKT) ke mutabiq rozana subah 9:00 AM (4:00 AM UTC)
-    - cron: '0 4 * * *'
-  workflow_dispatch: # Manual chalane ke liye run button
+    - cron: '0 4 * * *' # Pakistan time subah 9:00 AM
+  workflow_dispatch: # Manual run ka button
 
 jobs:
   run-automation:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. GitHub Repository Checkout
     - name: Checkout Repository Code
       uses: actions/checkout@v4
 
-    # 2. Python Environment Setup
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    # 3. Video Automation System Dependency (FFmpeg) Install karna
-    - name: Install FFmpeg System Dependency
+    - name: Install FFmpeg
       run: |
         sudo apt-get update
         sudo apt-get install -y ffmpeg
 
-    # 4. Notebook convert karne aur workflow chalane ki libraries
+    # Yahan humne network timeouts ko handle karne ke liye h11 aur cryptography packages add kiye hain
     - name: Install Required Packages
       run: |
         python -m pip install --upgrade pip
-        pip install jupyter nbconvert supabase postgrest httpx moviepy gdown
+        pip install jupyter nbconvert supabase postgrest httpx moviepy gdown h11 cryptography
 
-    # 5. Notebook File ko direct Python Script (.py) me convert karna
     - name: Convert Main Notebook to Python
       run: |
-        echo "🔄 Converting Jupyter Notebook into pure Python script..."
+        echo "🔄 Converting notebook into python..."
         jupyter nbconvert --to python "All Run app_1.ipynb"
 
-    # 6. Converted Script ko Run karna (Supabase Secrets ke sath)
+    # Python -u flag lagaya hai taake network errors line-by-line real-time show hon
     - name: Execute Main Orchestrator Script
       env:
         DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
        # SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        PYTHONUNBUFFERED: "1"
       run: |
-        echo "🔥 Main orchestrator app running..."
-        python "All Run app_1.py"
+        echo "🔥 Main orchestrator running..."
+        python -u "All Run app_1.py"
 
-    # 7. Safety Cleanup (Temporary space se file clear karna)
     - name: Secure Environment Wipe
       if: always()
       run: |
-        echo "🗑️ Wiping converted temporary .py file from local space..."
-        rm -f "All_Run_app_1.py"
-        echo "✨ Totally successful and storage cleared!"
+        rm -f "All Run app_1.py"
+        echo "✨ Environment cleaned up successfully!"
