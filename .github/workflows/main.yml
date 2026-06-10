@@ -60,6 +60,12 @@ jobs:
         sed -i "s|\"/YT_Tool_output\"|\"YT_Tool_output\"|g" *.py || true
         sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" *.py || true
         sed -i "s|\"/YT_output_CC\"|\"YT_output_CC\"|g" *.py || true
+       
+        if [ -f 02_B_Editor_App_3.py ]; then
+          echo "🛠️ Removing --fuzzy argument from File 2..."
+          sed -i "s/--fuzzy//g" 02_B_Editor_App_3.py || true
+        fi
+
         
         # 2. FILE 1 ERROR SHOWING & AUTOMATIC FORCE LAST VIDEO LOGIC
         if [ -f 01_A_Long_Fetcher_3.py ]; then
