@@ -48,17 +48,45 @@ jobs:
         jupyter nbconvert --to python *.ipynb
 
     # 5. Colab to GitHub Path and IPython Fixes
-    # Colab ke paths ko GitHub ke mutabiq change karna (Sari python files me) aur IPython bypass code inject karna
+    # 5. MASTER PATH, FORCE DOWNLOAD & DETAILED LOGS FIX
     - name: Inject Fixes and Path Modifications
       run: |
-        echo "🛠️ Replacing Colab paths with GitHub workspace paths in ALL scripts..."
-        # '*' lagane se yeh main file aur sub-scripts dono ke andar se /content mita dega
+        echo "🛠️ Injecting custom force-download and error logging into scripts..."
+        
+        # 1. Standard Paths Fix
         sed -i "s|/content/||g" *.py || true
         sed -i "s|/content||g" *.py || true
+        sed -i "s|'/YT_Tool_output'|'YT_Tool_output'|g" *.py || true
+        sed -i "s|\"/YT_Tool_output\"|\"YT_Tool_output\"|g" *.py || true
+        sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" *.py || true
+        sed -i "s|\"/YT_output_CC\"|\"YT_output_CC\"|g" *.py || true
         
-        # Main file me get_ipython ka crash bypass inject karna
-        sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' All_Run_app_1.py
-    
+        # 2. FILE 1 ERROR SHOWING & AUTOMATIC FORCE LAST VIDEO LOGIC
+        if [ -f 01_A_Long_Fetcher_3.py ]; then
+          echo "🔥 Patching File 1 for forcing at least one video and enabling full errors..."
+          
+          # yt-dlp ke errors dekhne ke liye quiet mode ko band karna
+          sed -i "s/'quiet': True/'quiet': False/g" 01_A_Long_Fetcher_3.py || true
+          sed -i "s/quiet=True/quiet=False/g" 01_A_Long_Fetcher_3.py || true
+          
+          # Force download logic inject karna: Agar loop khatam ho jaye aur koi video na download hui ho, toh feed ki sab se pehli (latest) video ko force download karega
+          sed -i '/for entry in feed.entries:/i \        has_downloaded_any = False' 01_A_Long_Fetcher_3.py || true
+          sed -i '/download=True/a \                            has_downloaded_any = True' 01_A_Long_Fetcher_3.py || true
+          
+          # Loop ke baad agar has_downloaded_any False hai, toh aakhri video download karne ka backup route
+          sed -i '/supabase.table(table_name).update/i \        if not has_downloaded_any and feed.entries:\n            print("⚠️ Same Date/Time detected! No new videos found. Forcing download of the last available video...")\n            last_entry = feed.entries[0]\n            try:\n                with yt_dlp.YoutubeDL(ydl_opts) as ydl:\n                    info = ydl.extract_info(last_entry.link, download=True)\n                    tmp = ydl.prepare_filename(info)\n                dur, ratio = get_video_metadata(tmp)\n                if ratio == "9:16":\n                    dest = os.path.join(base_dir, cat)\n                    os.makedirs(dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(dest, os.path.basename(tmp)))\n                else:\n                    make_shorts_with_blur(tmp, cat)\n                    b_dest = os.path.join(blogger_dir, cat)\n                    os.makedirs(b_dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(b_dest, os.path.basename(tmp)))\n            except Exception as ytdl_err:\n                print(f"❌ YouTube Library Error (yt-dlp) faced: {ytdl_err}")' 01_A_Long_Fetcher_3.py || true
+        fi
+
+        # 3. FILE 3 FIX: Category folders path safety patch
+        if [ -f 03_C_Caption_Ai_3.py ]; then
+          sed -i "s|out_file = os.path.join(OUTPUT_BASE_DIR, os.path.basename(video_path))|rel_path = os.path.relpath(video_path, BASE_DIR)\n            out_file = os.path.join(OUTPUT_BASE_DIR, rel_path)\n            os.makedirs(os.path.dirname(out_file), exist_ok=True)|g" 03_C_Caption_Ai_3.py || true
+        fi
+        
+        # 4. Main Notebook Engine Crash Bypass
+        if [ -f All_Run_app_1.py ]; then
+          sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' All_Run_app_1.py
+        fi
+        
     # 6. Execution with Single Secret Variable (DRIVE_URLS)
     - name: Execute Main Script App
       env:
