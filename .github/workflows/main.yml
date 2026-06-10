@@ -30,7 +30,7 @@ jobs:
         pip install yt-dlp feedparser supabase tqdm requests beautifulsoup4 python-dateutil moviepy==2.0.0
         pip install assemblyai google-generativeai pydub numpy google-generativeai
         apt-get update -qq && apt-get install -y imagemagick fonts-liberation -qq
-        sed -i 's/domain=\"path\" rights=\"none\" pattern=\"@\\*\"/domain=\"path\" rights=\"read|write\" pattern=\"@\\*\"/g' /etc/ImageMagick-6/policy.xml
+       # sed -i 's/domain=\"path\" rights=\"none\" pattern=\"@\\*\"/domain=\"path\" rights=\"read|write\" pattern=\"@\\*\"/g' /etc/ImageMagick-6/policy.xml
 
     - name: Convert Main Notebook to Python
       run: |
