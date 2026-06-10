@@ -18,45 +18,56 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install FFmpeg
+    # 1. System Packages (FFmpeg, ImageMagick, Fonts) with Sudo
+    - name: Install System Dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+        sudo apt-get update -qq
+        sudo apt-get install -y ffmpeg imagemagick fonts-liberation -qq
 
-    - name: Install Required Packages
+    # 2. All Python Libraries (Pip upgraded, MoviePy fixed to 2.0.0, AI & Web Packages)
+    - name: Install All Python Packages
       run: |
         python -m pip install --upgrade pip
-        pip install jupyter nbconvert supabase postgrest httpx moviepy gdown h11 cryptography ipython
-        pip install yt-dlp feedparser supabase tqdm requests beautifulsoup4 python-dateutil moviepy==2.0.0
-        pip install assemblyai google-generativeai pydub numpy google-generativeai
-        apt-get update -qq && apt-get install -y imagemagick fonts-liberation -qq
-       # sed -i 's/domain=\"path\" rights=\"none\" pattern=\"@\\*\"/domain=\"path\" rights=\"read|write\" pattern=\"@\\*\"/g' /etc/ImageMagick-6/policy.xml
+        pip install jupyter nbconvert supabase postgrest httpx gdown h11 cryptography ipython
+        pip install yt-dlp feedparser tqdm requests beautifulsoup4 python-dateutil
+        pip install assemblyai google-generativeai pydub numpy
+        pip install moviepy==2.0.0
 
+    # 3. ImageMagick Security Policy Fix with Root/Sudo Permissions
+    - name: Fix ImageMagick Security Policy
+      run: |
+        echo "🛠️ Modifying ImageMagick policy with root permissions..."
+        if [ -f /etc/ImageMagick-6/policy.xml ]; then
+          sudo sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml
+        fi
+
+    # 4. Notebook to Python conversion
     - name: Convert Main Notebook to Python
       run: |
         echo "🔄 Converting notebook to pure Python script..."
         jupyter nbconvert --to python *.ipynb
 
-    # Colab ke paths ko GitHub ke mutabiq change karna aur IPython bypass code inject karna
+    # 5. Colab to GitHub Path and IPython Fixes
     - name: Inject Fixes and Path Modifications
       run: |
         echo "🛠️ Replacing Colab paths with GitHub workspace paths..."
-        # 1. Yeh line '/content/' path ko normal folder me convert karegi
+        # '/content/' path ko normal folder me convert karna
         sed -i "s|/content/||g" All_Run_app_1.py
         sed -i "s|/content||g" All_Run_app_1.py
         
-        # 2. Yeh line get_ipython ka error hamesha ke liye bypass karegi
+        # get_ipython ka error hamesha ke liye bypass karna
         sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' All_Run_app_1.py
 
-    # 🔥 SINGLE SECRET STEP: Sirf DRIVE_URLS pass kiya hai
+    # 6. Execution with Single Secret Variable (DRIVE_URLS)
     - name: Execute Main Orchestrator Script
       env:
-        DRIVE_URLS: ${{ secrets.DRIVE_URLS }} # Sirf aik secret variable use ho raha hai
+        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
         PYTHONUNBUFFERED: "1"
       run: |
         echo "🔥 Executing the orchestrator application..."
         python -u All_Run_app_1.py
 
+    # 7. Auto Environment Cleanup
     - name: Secure Environment Wipe
       if: always()
       run: |
