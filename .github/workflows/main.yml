@@ -47,39 +47,38 @@ jobs:
         echo "🔄 Converting notebook to pure Python script..."
         jupyter nbconvert --to python *.ipynb
 
-    # 5. Colab to GitHub Path and IPython Fixes
     # 5. MASTER PATH, FORCE DOWNLOAD & DETAILED LOGS FIX
     - name: Inject Fixes and Path Modifications
       run: |
-        echo "🛠️ Injecting custom force-download and error logging into scripts..."
+        echo "🛠️ Injecting custom force-download, gdown fixes and error logging..."
         
-        # 1. Standard Paths Fix
+        # 1. Standard Paths Fix (Colab to GitHub Local Workspace)
         sed -i "s|/content/||g" *.py || true
         sed -i "s|/content||g" *.py || true
         sed -i "s|'/YT_Tool_output'|'YT_Tool_output'|g" *.py || true
         sed -i "s|\"/YT_Tool_output\"|\"YT_Tool_output\"|g" *.py || true
         sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" *.py || true
         sed -i "s|\"/YT_output_CC\"|\"YT_output_CC\"|g" *.py || true
-       
+        
+        # 🔥 FILE 2 FIX: gdown ke --fuzzy error ko script se clear karna
         if [ -f 02_B_Editor_App_3.py ]; then
           echo "🛠️ Removing --fuzzy argument from File 2..."
           sed -i "s/--fuzzy//g" 02_B_Editor_App_3.py || true
+          # Agar script ke andar loop me os.system se gdown chal raha ho, usay bhi target karna:
+          sed -i 's/gdown --fuzzy/gdown/g' 02_B_Editor_App_3.py || true
         fi
 
-        
         # 2. FILE 1 ERROR SHOWING & AUTOMATIC FORCE LAST VIDEO LOGIC
         if [ -f 01_A_Long_Fetcher_3.py ]; then
           echo "🔥 Patching File 1 for forcing at least one video and enabling full errors..."
-          
-          # yt-dlp ke errors dekhne ke liye quiet mode ko band karna
           sed -i "s/'quiet': True/'quiet': False/g" 01_A_Long_Fetcher_3.py || true
           sed -i "s/quiet=True/quiet=False/g" 01_A_Long_Fetcher_3.py || true
           
-          # Force download logic inject karna: Agar loop khatam ho jaye aur koi video na download hui ho, toh feed ki sab se pehli (latest) video ko force download karega
+          # Force download logic inject karna
           sed -i '/for entry in feed.entries:/i \        has_downloaded_any = False' 01_A_Long_Fetcher_3.py || true
           sed -i '/download=True/a \                            has_downloaded_any = True' 01_A_Long_Fetcher_3.py || true
           
-          # Loop ke baad agar has_downloaded_any False hai, toh aakhri video download karne ka backup route
+          # Fallback check insert karna
           sed -i '/supabase.table(table_name).update/i \        if not has_downloaded_any and feed.entries:\n            print("⚠️ Same Date/Time detected! No new videos found. Forcing download of the last available video...")\n            last_entry = feed.entries[0]\n            try:\n                with yt_dlp.YoutubeDL(ydl_opts) as ydl:\n                    info = ydl.extract_info(last_entry.link, download=True)\n                    tmp = ydl.prepare_filename(info)\n                dur, ratio = get_video_metadata(tmp)\n                if ratio == "9:16":\n                    dest = os.path.join(base_dir, cat)\n                    os.makedirs(dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(dest, os.path.basename(tmp)))\n                else:\n                    make_shorts_with_blur(tmp, cat)\n                    b_dest = os.path.join(blogger_dir, cat)\n                    os.makedirs(b_dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(b_dest, os.path.basename(tmp)))\n            except Exception as ytdl_err:\n                print(f"❌ YouTube Library Error (yt-dlp) faced: {ytdl_err}")' 01_A_Long_Fetcher_3.py || true
         fi
 
