@@ -48,16 +48,17 @@ jobs:
         jupyter nbconvert --to python *.ipynb
 
     # 5. Colab to GitHub Path and IPython Fixes
+    # Colab ke paths ko GitHub ke mutabiq change karna (Sari python files me) aur IPython bypass code inject karna
     - name: Inject Fixes and Path Modifications
       run: |
-        echo "🛠️ Replacing Colab paths with GitHub workspace paths..."
-        # '/content/' path ko normal folder me convert karna
-        sed -i "s|/content/||g" All_Run_app_1.py
-        sed -i "s|/content||g" All_Run_app_1.py
+        echo "🛠️ Replacing Colab paths with GitHub workspace paths in ALL scripts..."
+        # '*' lagane se yeh main file aur sub-scripts dono ke andar se /content mita dega
+        sed -i "s|/content/||g" *.py || true
+        sed -i "s|/content||g" *.py || true
         
-        # get_ipython ka error hamesha ke liye bypass karna
+        # Main file me get_ipython ka crash bypass inject karna
         sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' All_Run_app_1.py
-
+    
     # 6. Execution with Single Secret Variable (DRIVE_URLS)
     - name: Execute Main Orchestrator Script
       env:
