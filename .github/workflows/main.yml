@@ -60,7 +60,7 @@ jobs:
         sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' All_Run_app_1.py
     
     # 6. Execution with Single Secret Variable (DRIVE_URLS)
-    - name: Execute Main Orchestrator Script
+    - name: Execute Main Script App
       env:
         DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
         PYTHONUNBUFFERED: "1"
