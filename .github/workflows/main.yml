@@ -47,51 +47,47 @@ jobs:
         echo "🔄 Converting notebook to pure Python script..."
         jupyter nbconvert --to python *.ipynb
 
-    # 5. MASTER PATH, FORCE DOWNLOAD & DETAILED LOGS FIX
+     # 5. MASTER PATH, FORCE DOWNLOAD & DIRECT FOLDER ROUTING
     - name: Inject Fixes and Path Modifications
       run: |
-        echo "🛠️ Injecting custom force-download, gdown fixes and error logging..."
+        echo "🛠️ Injecting custom routing to skip File 2 completely..."
         
-        # 1. Standard Paths Fix (Colab to GitHub Local Workspace)
+        # Standard Paths Fix
         sed -i "s|/content/||g" *.py || true
         sed -i "s|/content||g" *.py || true
-        sed -i "s|'/YT_Tool_output'|'YT_Tool_output'|g" *.py || true
-        sed -i "s|\"/YT_Tool_output\"|\"YT_Tool_output\"|g" *.py || true
-        sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" *.py || true
-        sed -i "s|\"/YT_output_CC\"|\"YT_output_CC\"|g" *.py || true
         
-        # 🔥 FILE 2 FIX: gdown ke --fuzzy error ko script se clear karna
-        if [ -f 02_B_Editor_App_3.py ]; then
-          echo "🛠️ Removing --fuzzy argument from File 2..."
-          sed -i "s/--fuzzy//g" 02_B_Editor_App_3.py || true
-          # Agar script ke andar loop me os.system se gdown chal raha ho, usay bhi target karna:
-          sed -i 's/gdown --fuzzy/gdown/g' 02_B_Editor_App_3.py || true
-        fi
-
-        # 2. FILE 1 ERROR SHOWING & AUTOMATIC FORCE LAST VIDEO LOGIC
+        # 🔥 FILE 1 FORCE & ROUTING FIX: Videos ko direct YT_Tool_output me save karna
         if [ -f 01_A_Long_Fetcher_3.py ]; then
-          echo "🔥 Patching File 1 for forcing at least one video and enabling full errors..."
+          echo "🔥 Patching File 1 to download directly into File 2's output folder..."
+          
+          # Force download logic (Same Date/Time bypass)
           sed -i "s/'quiet': True/'quiet': False/g" 01_A_Long_Fetcher_3.py || true
           sed -i "s/quiet=True/quiet=False/g" 01_A_Long_Fetcher_3.py || true
-          
-          # Force download logic inject karna
           sed -i '/for entry in feed.entries:/i \        has_downloaded_any = False' 01_A_Long_Fetcher_3.py || true
           sed -i '/download=True/a \                            has_downloaded_any = True' 01_A_Long_Fetcher_3.py || true
           
-          # Fallback check insert karna
-          sed -i '/supabase.table(table_name).update/i \        if not has_downloaded_any and feed.entries:\n            print("⚠️ Same Date/Time detected! No new videos found. Forcing download of the last available video...")\n            last_entry = feed.entries[0]\n            try:\n                with yt_dlp.YoutubeDL(ydl_opts) as ydl:\n                    info = ydl.extract_info(last_entry.link, download=True)\n                    tmp = ydl.prepare_filename(info)\n                dur, ratio = get_video_metadata(tmp)\n                if ratio == "9:16":\n                    dest = os.path.join(base_dir, cat)\n                    os.makedirs(dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(dest, os.path.basename(tmp)))\n                else:\n                    make_shorts_with_blur(tmp, cat)\n                    b_dest = os.path.join(blogger_dir, cat)\n                    os.makedirs(b_dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(b_dest, os.path.basename(tmp)))\n            except Exception as ytdl_err:\n                print(f"❌ YouTube Library Error (yt-dlp) faced: {ytdl_err}")' 01_A_Long_Fetcher_3.py || true
+          # Sab se zaroori tabdeeli: Base input directory ko badal kar target output folder kar dena
+          sed -i "s|base_dir = 'YT_Tool_Input'|base_dir = 'YT_Tool_output'|g" 01_A_Long_Fetcher_3.py || true
+          sed -i 's|base_dir = "YT_Tool_Input"|base_dir = "YT_Tool_output"|g' 01_A_Long_Fetcher_3.py || true
+          
+          # Force download fallback logic (with new folder path 'YT_Tool_output')
+          sed -i '/supabase.table(table_name).update/i \        if not has_downloaded_any and feed.entries:\n            print("⚠️ Same Date/Time detected! Forcing download of the last available video...")\n            last_entry = feed.entries[0]\n            try:\n                with yt_dlp.YoutubeDL(ydl_opts) as ydl:\n                    info = ydl.extract_info(last_entry.link, download=True)\n                    tmp = ydl.prepare_filename(info)\n                dur, ratio = get_video_metadata(tmp)\n                if ratio == "9:16":\n                    dest = os.path.join("YT_Tool_output", cat)\n                    os.makedirs(dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(dest, os.path.basename(tmp)))\n                else:\n                    make_shorts_with_blur(tmp, cat)\n                    b_dest = os.path.join(blogger_dir, cat)\n                    os.makedirs(b_dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(b_dest, os.path.basename(tmp)))\n            except Exception as ytdl_err:\n                print(f"❌ YouTube Library Error (yt-dlp) faced: {ytdl_err}")' 01_A_Long_Fetcher_3.py || true
         fi
 
-        # 3. FILE 3 FIX: Category folders path safety patch
+        # FILE 3 FIX: Category folders ko barkrar rakhna
         if [ -f 03_C_Caption_Ai_3.py ]; then
+          sed -i "s|'/YT_Tool_output'|'YT_Tool_output'|g" 03_C_Caption_Ai_3.py || true
+          sed -i "s|\"/YT_Tool_output\"|\"YT_Tool_output\"|g" 03_C_Caption_Ai_3.py || true
+          sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" 03_C_Caption_Ai_3.py || true
+          sed -i "s|\"/YT_output_CC\"|\"YT_output_CC\"|g" 03_C_Caption_Ai_3.py || true
           sed -i "s|out_file = os.path.join(OUTPUT_BASE_DIR, os.path.basename(video_path))|rel_path = os.path.relpath(video_path, BASE_DIR)\n            out_file = os.path.join(OUTPUT_BASE_DIR, rel_path)\n            os.makedirs(os.path.dirname(out_file), exist_ok=True)|g" 03_C_Caption_Ai_3.py || true
         fi
         
-        # 4. Main Notebook Engine Crash Bypass
+        # Main Notebook Engine Crash Bypass
         if [ -f All_Run_app_1.py ]; then
           sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' All_Run_app_1.py
         fi
-        
+
     # 6. Execution with Single Secret Variable (DRIVE_URLS)
     - name: Execute Main Script App
       env:
