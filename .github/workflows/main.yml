@@ -47,57 +47,55 @@ jobs:
         echo "🔄 Converting notebook to pure Python script..."
         jupyter nbconvert --to python *.ipynb
 
-        
-        # 5. MASTER PATH, FORCE DOWNLOAD & DRIVE FALLBACK ROUTING
+        # 5. MASTER PATH, FORCE DOWNLOAD & DRIVE FALLBACK ROUTING (Fixed for Spaces in Filenames)
     - name: Inject Fixes and Path Modifications
       run: |
-        echo "🛠️ Injecting custom routing and Google Drive backup fallback..."
+        echo "🛠️ Injecting custom routing and handling spaces in filenames..."
         
         # Standard Paths Fix (Colab to GitHub Workspace)
         sed -i "s|/content/||g" *.py || true
         sed -i "s|/content||g" *.py || true
         
-        # 🔥 FILE 1 SAFETY PATCH: Target folder ko YT_Tool_output par route karna
-        if [ -f 01_A_Long_Fetcher_3.py ]; then
+        # 🔥 FILE 1 SAFETY PATCH (Handling exact space name "01_A_Long Fetcher 3.py")
+        if [ -f "01_A_Long Fetcher 3.py" ]; then
           echo "🔥 Patching File 1 base directory to YT_Tool_output..."
-          sed -i "s/'quiet': True/'quiet': False/g" 01_A_Long_Fetcher_3.py || true
-          sed -i "s/quiet=True/quiet=False/g" 01_A_Long_Fetcher_3.py || true
+          sed -i "s/'quiet': True/'quiet': False/g" "01_A_Long Fetcher 3.py" || true
+          sed -i "s/quiet=True/quiet=False/g" "01_A_Long Fetcher 3.py" || true
           
           # Base directory change taake download direct output folder me ho
-          sed -i "s|base_dir = 'YT_Tool_Input'|base_dir = 'YT_Tool_output'|g" 01_A_Long_Fetcher_3.py || true
-          sed -i 's|base_dir = "YT_Tool_Input"|base_dir = "YT_Tool_output"|g' 01_A_Long_Fetcher_3.py || true
+          sed -i "s|base_dir = 'YT_Tool_Input'|base_dir = 'YT_Tool_output'|g" "01_A_Long Fetcher 3.py" || true
+          sed -i 's|base_dir = "YT_Tool_Input"|base_dir = "YT_Tool_output"|g' "01_A_Long Fetcher 3.py" || true
           
           # Force download logic mapping (Bypass same date check)
-          sed -i '/for entry in feed.entries:/i \        has_downloaded_any = False' 01_A_Long_Fetcher_3.py || true
-          sed -i '/download=True/a \                            has_downloaded_any = True' 01_A_Long_Fetcher_3.py || true
+          sed -i '/for entry in feed.entries:/i \        has_downloaded_any = False' "01_A_Long Fetcher 3.py" || true
+          sed -i '/download=True/a \                            has_downloaded_any = True' "01_A_Long Fetcher 3.py" || true
           
           # Loop ke baad fallback check
-          sed -i '/supabase.table(table_name).update/i \        if not has_downloaded_any and feed.entries:\n            print("⚠️ Same Date/Time detected! Forcing download of the last available video...")\n            last_entry = feed.entries[0]\n            try:\n                with yt_dlp.YoutubeDL(ydl_opts) as ydl:\n                    info = ydl.extract_info(last_entry.link, download=True)\n                    tmp = ydl.prepare_filename(info)\n                dur, ratio = get_video_metadata(tmp)\n                if ratio == "9:16":\n                    dest = os.path.join("YT_Tool_output", cat)\n                    os.makedirs(dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(dest, os.path.basename(tmp)))\n                else:\n                    make_shorts_with_blur(tmp, cat)\n                    b_dest = os.path.join(blogger_dir, cat)\n                    os.makedirs(b_dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(b_dest, os.path.basename(tmp)))\n            except Exception as ytdl_err:\n                print(f"❌ YouTube Library Error (yt-dlp) faced: {ytdl_err}")' 01_A_Long_Fetcher_3.py || true
+          sed -i '/supabase.table(table_name).update/i \        if not has_downloaded_any and feed.entries:\n            print("⚠️ Same Date/Time detected! Forcing download of the last available video...")\n            last_entry = feed.entries[0]\n            try:\n                with yt_dlp.YoutubeDL(ydl_opts) as ydl:\n                    info = ydl.extract_info(last_entry.link, download=True)\n                    tmp = ydl.prepare_filename(info)\n                dur, ratio = get_video_metadata(tmp)\n                if ratio == "9:16":\n                    dest = os.path.join("YT_Tool_output", cat)\n                    os.makedirs(dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(dest, os.path.basename(tmp)))\n                else:\n                    make_shorts_with_blur(tmp, cat)\n                    b_dest = os.path.join(blogger_dir, cat)\n                    os.makedirs(b_dest, exist_ok=True)\n                    shutil.move(tmp, os.path.join(b_dest, os.path.basename(tmp)))\n            except Exception as ytdl_err:\n                print(f"❌ YouTube Library Error (yt-dlp) faced: {ytdl_err}")' "01_A_Long Fetcher 3.py" || true
         fi
 
-        # FILE 3 FIX: Slashes aur paths handle karna
-        if [ -f 03_C_Caption_Ai_3.py ]; then
-          sed -i "s|'/YT_Tool_output'|'YT_Tool_output'|g" 03_C_Caption_Ai_3.py || true
-          sed -i "s|\"/YT_Tool_output\"|\"YT_Tool_output\"|g" 03_C_Caption_Ai_3.py || true
-          sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" 03_C_Caption_Ai_3.py || true
-          sed -i "s|\"/YT_output_CC\"|\"YT_output_CC\"|g" 03_C_Caption_Ai_3.py || true
-          sed -i "s|out_file = os.path.join(OUTPUT_BASE_DIR, os.path.basename(video_path))|rel_path = os.path.relpath(video_path, BASE_DIR)\n            out_file = os.path.join(OUTPUT_BASE_DIR, rel_path)\n            os.makedirs(os.path.dirname(out_file), exist_ok=True)|g" 03_C_Caption_Ai_3.py || true
+        # FILE 3 FIX (Handling exact space name "03_C_Caption Ai 3.py")
+        if [ -f "03_C_Caption Ai 3.py" ]; then
+          sed -i "s|'/YT_Tool_output'|'YT_Tool_output'|g" "03_C_Caption Ai 3.py" || true
+          sed -i "s|\"/YT_Tool_output\"|\"YT_Tool_output\"|g" "03_C_Caption Ai 3.py" || true
+          sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" "03_C_Caption Ai 3.py" || true
+          sed -i "s|\"/YT_output_CC\"|\"YT_output_CC\"|g" "03_C_Caption Ai 3.py" || true
+          sed -i "s|out_file = os.path.join(OUTPUT_BASE_DIR, os.path.basename(video_path))|rel_path = os.path.relpath(video_path, BASE_DIR)\n            out_file = os.path.join(OUTPUT_BASE_DIR, rel_path)\n            os.makedirs(os.path.dirname(out_file), exist_ok=True)|g" "03_C_Caption Ai 3.py" || true
         fi
         
-        # 🔥 MAIN RUNNER CRASH FIX (Bypass Jupyter/IPython Magic command checks)
-        # Yeh line All_Run_app_1.py ke crash hone wale system command errors ko completely bypass karegi
+        # All Files Engine Crash Bypass
         for f in *.py; do
           sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' "$f" || true
         done
 
-    # 6. RUN PYTHON AUTOMATION WITH GUARANTEED STEP EXECUTION
+    # 6. RUN PYTHON AUTOMATION WITH GUARANTEED STEP EXECUTION (Fixed Space Filenames)
     - name: Run Automation Scripts
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         PYTHONUNBUFFERED: "1"
       run: |
         echo "🚀 Running File 1 (YouTube Downloader)..."
-        python 01_A_Long_Fetcher_3.py || true
+        python "01_A_Long Fetcher 3.py" || true
         
         # 🔥 BACKUP ENGINE: Agar YouTube block ho ya folder empty ho, Drive se fallback active hoga
         if [ ! -d "YT_Tool_output" ] || [ -z "$(ls -A YT_Tool_output 2>/dev/null)" ]; then
@@ -111,18 +109,17 @@ jobs:
         
         echo "⏭️ File 2 is intentionally SKIPPED to bypass gdown errors."
         
-        # 🔥 SAFEST METHOD: Agar main runner (All_Run_app_1.py) individual scripts chala raha hai
-        # toh hum yahan direct sequence me call kar rahe hain taake agar main file crash bhi ho, workflow run complete ho!
+        # 🔥 DIRECT CHAIN EXECUTION: Agar All_Run_app_1.py crash bhi ho jaye, baki files sequential chalengi!
         if [ -f All_Run_app_1.py ]; then
           echo "🚀 Executing Main Master File (All_Run_app_1.py)..."
           python All_Run_app_1.py || true
-        else
-          echo "⚠️ Main app file not found, running individual remaining scripts..."
-          echo "🚀 Running File 3 (Caption AI)..."
-          python 03_C_Caption_Ai_3.py || true
-          echo "🚀 Running File 4 (Uploader & Supabase)..."
-          python 04_D_Url_save_Gemini_3.py || true
         fi
+        
+        echo "🚀 Running File 3 (Caption AI)..."
+        python "03_C_Caption Ai 3.py" || true
+        
+        echo "🚀 Running File 4 (Uploader & Supabase)..."
+        python "04_D_Url save Gemini 3.py" || true
         
     # 7. Auto Environment Cleanup
     - name: Secure Environment Wipe
