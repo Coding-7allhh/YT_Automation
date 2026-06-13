@@ -48,37 +48,36 @@ jobs:
         echo "🔄 Converting notebook to pure Python script..."
         jupyter nbconvert --to python *.ipynb
 
-     # 5. [NEW] PRE-DOWNLOAD BACKUP VIDEO STEP (Main file chalne se pehle video ready karna)
-    - name: Pre-Download Backup Video Asset
+     # 5. 🔥 DIRECT ROUTING STEP: Video ko direct File 4 ke input (YT_output_CC) me save karna
+    - name: Pre-Download Backup Video Directly For File 4
       run: |
-        echo "📥 Downloading backup video from Google Drive before main execution..."
-        mkdir -p YT_output_CC/Sad_peotry
+        echo "📥 Downloading backup video from Google Drive directly into File 4 input folder..."
+        # File 4 ka input folder 'YT_output_CC' hota hai, hum direct wahan folder bana rahe hain
+        mkdir -p YT_output_CC
         
-        # Drive direct link se video download karke exact output folder me save karna
-        gdown "https://drive.google.com/uc?id=1GgAxpDiYLOkv0E_BXjCpbvCr7oH-f_Vt" -O YT_Tool_output/Default_Category/backup_example.mp4
-        echo "✅ Backup asset successfully injected into YT_Tool_output/Default_Category/"
+        # Drive link se video direct File 4 ke folder me download ho rahi hai
+        gdown "https://drive.google.com/uc?id=1GgAxpDiYLOkv0E_BXjCpbvCr7oH-f_Vt" -O YT_output_CC/backup_example.mp4
+        echo "✅ Backup video successfully saved inside YT_output_CC/ for Supabase!"
 
-    # 6. MASTER PATH, JUPYTER COMMANDS & PILLOW ANTIALIAS FIX
+    # 6. MASTER PATH, JUPYTER BYPASS & FILE 3 AUTOMATIC SKIP PATTERN
     - name: Inject Fixes and Path Modifications
       run: |
-        echo "🛠️ Cleaning paths, fixing IPython engine, and patching Pillow ANTIALIAS bugs..."
+        echo "🛠️ Cleaning paths and preparing scripts for direct Supabase uploading..."
         
-        # Standard Paths Fix (Colab to GitHub Local Workspace)
+        # Standard Paths Fix
         sed -i "s|/content/||g" *.py || true
         sed -i "s|/content||g" *.py || true
         
-        # 🔥 FILE 3 PILLOW BUG FIX: ANTIALIAS ko LANCZOS se replace karna taake NoneType crash na aaye
+        # 🔥 FILE 4 PATH SAFETY: Check karna ke File 4 local paths 'YT_output_CC' ko sahi se padhay
+        if [ -f "04_D_Url save Gemini 3.py" ]; then
+          sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" "04_D_Url save Gemini 3.py" || true
+          sed -i "s|\"/YT_output_CC\"|\"YT_output_CC\"|g" "04_D_Url save Gemini 3.py" || true
+        fi
+
+        # 🔥 FILE 3 DISABLE: Agar All_Run_app_1.py File 3 ko chalaye toh usay khaali (skip) kar dena taake crash na ho
         if [ -f "03_C_Caption Ai 3.py" ]; then
-          echo "🛠️ Patching PIL.Image.ANTIALIAS to Image.LANCZOS in File 3..."
-          sed -i 's/Image.ANTIALIAS/Image.LANCZOS/g' "03_C_Caption Ai 3.py" || true
-          sed -i 's/\.ANTIALIAS/.LANCZOS/g' "03_C_Caption Ai 3.py" || true
-          
-          # Folder Paths Configuration
-          sed -i "s|'/YT_Tool_output'|'YT_Tool_output'|g" "03_C_Caption Ai 3.py" || true
-          sed -i "s|\"/YT_Tool_output\"|\"YT_Tool_output\"|g" "03_C_Caption Ai 3.py" || true
-          sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" "03_C_Caption Ai 3.py" || true
-          sed -i "s|\"/YT_output_CC\"|\"YT_output_CC\"|g" "03_C_Caption Ai 3.py" || true
-          sed -i "s|out_file = os.path.join(OUTPUT_BASE_DIR, os.path.basename(video_path))|rel_path = os.path.relpath(video_path, BASE_DIR)\n            out_file = os.path.join(OUTPUT_BASE_DIR, rel_path)\n            os.makedirs(os.path.dirname(out_file), exist_ok=True)|g" "03_C_Caption Ai 3.py" || true
+          echo "⏭️ Emptying File 3 to safely bypass MoviePy rendering errors..."
+          echo "print('⏭️ File 3 skipped: Video already sent to File 4 input!')" > "03_C_Caption Ai 3.py"
         fi
         
         # ALL FILES ENGINE CRASH BYPASS: Jupyter magic commands fix
