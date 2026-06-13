@@ -84,7 +84,7 @@ jobs:
     # 7. RUN MASTER APPLICATION (Runs All 4 Files Sequentially Like Old Times)
     - name: Run Automation Scripts
       env:
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
         PYTHONUNBUFFERED: "1"
       run: |
         echo "🚀 Triggering Main File Manager: All_Run_app_1.py"
