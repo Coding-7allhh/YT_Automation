@@ -84,8 +84,8 @@ jobs:
 
     # 7. RUN MASTER APPLICATION (Runs All 4 Files Sequentially Like Old Times)
     - name: Run Automation Scripts
-    env:
-        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         PYTHONUNBUFFERED: "1"
       run: |
         echo "🚀 Triggering Main File Manager: All_Run_app_1.py"
@@ -101,7 +101,7 @@ jobs:
           python "02_B_Editor_App 3.py" || true
           python "03_C_Caption Ai 3.py" || true
           python "04_D_Url save Gemini 3.py" || true
-        fi   
+        fi
     
     # 8. Auto Environment Cleanup
     - name: Secure Environment Wipe
