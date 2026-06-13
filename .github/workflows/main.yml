@@ -43,6 +43,9 @@ jobs:
 
     # 4. Notebook to Python conversion
     - name: Convert Main Notebook to Python
+     env:
+        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
+        PYTHONUNBUFFERED: "1"
       run: |
         echo "🔄 Converting notebook to pure Python script..."
         jupyter nbconvert --to python *.ipynb
@@ -83,9 +86,6 @@ jobs:
 
     # 7. RUN MASTER APPLICATION (Runs All 4 Files Sequentially Like Old Times)
     - name: Run Automation Scripts
-      env:
-        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
-        PYTHONUNBUFFERED: "1"
       run: |
         echo "🚀 Triggering Main File Manager: All_Run_app_1.py"
         
