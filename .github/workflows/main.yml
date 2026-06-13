@@ -52,7 +52,7 @@ jobs:
     - name: Pre-Download Backup Video Asset
       run: |
         echo "📥 Downloading backup video from Google Drive before main execution..."
-        mkdir -p YT_Tool_output/Default_Category
+        mkdir -p YT_output_CC/Sad_peotry
         
         # Drive direct link se video download karke exact output folder me save karna
         gdown "https://drive.google.com/uc?id=1GgAxpDiYLOkv0E_BXjCpbvCr7oH-f_Vt" -O YT_Tool_output/Default_Category/backup_example.mp4
