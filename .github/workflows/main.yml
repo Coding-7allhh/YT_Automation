@@ -60,9 +60,6 @@ jobs:
 
     # 6. MASTER PATH & JUPYTER COMMANDS BYPASS FIX
     - name: Inject Fixes and Path Modifications
-     env:
-        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
-        PYTHONUNBUFFERED: "1"
       run: |
         echo "🛠️ Cleaning paths and fixing IPython engine bugs for All_Run_app_1..."
         
@@ -87,6 +84,9 @@ jobs:
 
     # 7. RUN MASTER APPLICATION (Runs All 4 Files Sequentially Like Old Times)
     - name: Run Automation Scripts
+    env:
+        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
+        PYTHONUNBUFFERED: "1"
       run: |
         echo "🚀 Triggering Main File Manager: All_Run_app_1.py"
         
@@ -103,7 +103,7 @@ jobs:
           python "04_D_Url save Gemini 3.py" || true
         fi   
     
-    # 7. Auto Environment Cleanup
+    # 8. Auto Environment Cleanup
     - name: Secure Environment Wipe
       if: always()
       run: |
