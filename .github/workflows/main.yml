@@ -58,17 +58,22 @@ jobs:
         gdown "https://drive.google.com/uc?id=1GgAxpDiYLOkv0E_BXjCpbvCr7oH-f_Vt" -O YT_Tool_output/Default_Category/backup_example.mp4
         echo "✅ Backup asset successfully injected into YT_Tool_output/Default_Category/"
 
-    # 6. MASTER PATH & JUPYTER COMMANDS BYPASS FIX
+    # 6. MASTER PATH, JUPYTER COMMANDS & PILLOW ANTIALIAS FIX
     - name: Inject Fixes and Path Modifications
       run: |
-        echo "🛠️ Cleaning paths and fixing IPython engine bugs for All_Run_app_1..."
+        echo "🛠️ Cleaning paths, fixing IPython engine, and patching Pillow ANTIALIAS bugs..."
         
         # Standard Paths Fix (Colab to GitHub Local Workspace)
         sed -i "s|/content/||g" *.py || true
         sed -i "s|/content||g" *.py || true
         
-        # FILE 3 FIX: Category folders path safety patch (Bypass deleting folders)
+        # 🔥 FILE 3 PILLOW BUG FIX: ANTIALIAS ko LANCZOS se replace karna taake NoneType crash na aaye
         if [ -f "03_C_Caption Ai 3.py" ]; then
+          echo "🛠️ Patching PIL.Image.ANTIALIAS to Image.LANCZOS in File 3..."
+          sed -i 's/Image.ANTIALIAS/Image.LANCZOS/g' "03_C_Caption Ai 3.py" || true
+          sed -i 's/\.ANTIALIAS/.LANCZOS/g' "03_C_Caption Ai 3.py" || true
+          
+          # Folder Paths Configuration
           sed -i "s|'/YT_Tool_output'|'YT_Tool_output'|g" "03_C_Caption Ai 3.py" || true
           sed -i "s|\"/YT_Tool_output\"|\"YT_Tool_output\"|g" "03_C_Caption Ai 3.py" || true
           sed -i "s|'/YT_output_CC'|'YT_output_CC'|g" "03_C_Caption Ai 3.py" || true
@@ -77,7 +82,6 @@ jobs:
         fi
         
         # ALL FILES ENGINE CRASH BYPASS: Jupyter magic commands fix
-        # Yeh command har file ke shuru me Dummy IPYTHON object inject karegi taake All_Run_app_1 crash na ho
         for f in *.py; do
           sed -i '1s/^/def get_ipython():\n    class Dummy:\n        def system(self, cmd): pass\n    return Dummy()\n\n/' "$f" || true
         done
