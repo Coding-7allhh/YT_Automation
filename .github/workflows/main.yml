@@ -43,9 +43,7 @@ jobs:
 
     # 4. Notebook to Python conversion
     - name: Convert Main Notebook to Python
-     env:
-        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
-        PYTHONUNBUFFERED: "1"
+     
       run: |
         echo "🔄 Converting notebook to pure Python script..."
         jupyter nbconvert --to python *.ipynb
@@ -62,6 +60,9 @@ jobs:
 
     # 6. MASTER PATH & JUPYTER COMMANDS BYPASS FIX
     - name: Inject Fixes and Path Modifications
+     env:
+        DRIVE_URLS: ${{ secrets.DRIVE_URLS }}
+        PYTHONUNBUFFERED: "1"
       run: |
         echo "🛠️ Cleaning paths and fixing IPython engine bugs for All_Run_app_1..."
         
