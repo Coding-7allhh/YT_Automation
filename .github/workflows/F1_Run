@@ -1,0 +1,48 @@
+name: Automated YouTube Fetcher & Processor
+
+on:
+  schedule:
+    # روزانہ 04:00 UTC (9:00 AM PKT) پر خود بخود چلتا ہے
+    - cron: '0 4 * * *'
+  workflow_dispatch: # آپ کو مینوئل طریقے سے چلانے کے لیے بٹن کلک کرنے کی اجازت دیتا ہے
+
+jobs:
+  run-automation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip' # اگلی بار تیزی سے چلانے کے لیے ڈیپینڈینسیز کو کیش کرتا ہے
+
+      - name: 🎬 Install System Dependencies (FFmpeg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: 📦 Install Python Libraries
+        run: |
+          python -m pip install --upgrade pip
+          pip install yt-dlp feedparser supabase tqdm requests beautifulsoup4 python-dateutil
+
+      - name: 🚀 Run the Fetcher Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          YT_PROXY: ${{ secrets.YT_PROXY }}
+        run: python fetcher.py
+
+      - name: 💾 Upload Processed Videos as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Processed-Videos
+          # یہ ان فولڈرز کو محفوظ کرتا ہے جہاں آپ کا سکرپٹ ویڈیوز رکھتا ہے
+          path: |
+            content/YT_Tool_Input/
+            content/output/Blogger/
+          retention-days: 5 # جگہ بچانے کے لیے فائلوں کو GitHub پر 5 دن تک محفوظ رکھتا ہے
