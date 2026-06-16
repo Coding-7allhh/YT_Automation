@@ -4,7 +4,7 @@ on:
   schedule:
     # روزانہ 04:00 UTC (9:00 AM PKT) پر خود بخود چلتا ہے
     - cron: '0 4 * * *'
-  workflow_dispatch: # آپ کو مینوئل طریقے سے چلانے کے لیے بٹن کلک کرنے کی اجازت دیتا ہے
+  workflow_dispatch: # مینوئل چلانے کا بٹن
 
 jobs:
   run-automation:
@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip' # اگلی بار تیزی سے چلانے کے لیے ڈیپینڈینسیز کو کیش کرتا ہے
+          # ایرر ختم کرنے کے لیے ہم نے کیش (cache) کی لائن یہاں سے ہٹا دی ہے
 
       - name: 🎬 Install System Dependencies (FFmpeg)
         run: |
@@ -41,8 +41,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Processed-Videos
-          # یہ ان فولڈرز کو محفوظ کرتا ہے جہاں آپ کا سکرپٹ ویڈیوز رکھتا ہے
           path: |
             content/YT_Tool_Input/
             content/output/Blogger/
-          retention-days: 5 # جگہ بچانے کے لیے فائلوں کو GitHub پر 5 دن تک محفوظ رکھتا ہے
+          retention-days: 5
