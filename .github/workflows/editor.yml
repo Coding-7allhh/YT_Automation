@@ -32,8 +32,7 @@ jobs:
       - name: 📥 Download Video from Google Drive
         run: |
           mkdir -p YT_Tool_Input/sad_peotry/
-          gdown --fuzzy "https://drive.google.com/file/d/1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e/view?usp=drivesdk" -O YT_Tool_Input/sad_peotry/input_video.mp4
-
+          gdown "https://drive.google.com/uc?id=1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e" -O YT_Tool_Input/sad_peotry/input_video.mp4
       - name: 🤖 Run the AI Editor Script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
