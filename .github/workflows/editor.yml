@@ -14,7 +14,8 @@ jobs:
       - name: 🐍 Setup Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+         python-version: '3.10'
+         cache: 'none'
           # ایرر ختم کرنے کے لیے کیش (cache) کی لائن یہاں سے ہٹا دی گئی ہے
 
       - name: 🎬 Install System Dependencies
