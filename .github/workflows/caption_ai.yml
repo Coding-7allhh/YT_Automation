@@ -1,0 +1,55 @@
+name: RajPut Caption AI Workflow
+
+on:
+  workflow_dispatch: # مینوئل چلانے کا بٹن
+  schedule:
+    - cron: '0 9 * * *' # روزانہ صبح 9:00 بجے چلے گا
+
+jobs:
+  run-caption-ai:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 🎬 Install System Dependencies & Unlock ImageMagick
+        run: |
+          sudo apt-get update -y -qq
+          sudo apt-get install -y ffmpeg imagemagick fonts-liberation -qq
+          sudo sed -i '/<policy domain="path" rights="none" pattern="@\*"/d' /etc/ImageMagick-6/policy.xml
+
+      - name: 📦 Install Python Libraries
+        run: |
+          python -m pip install --upgrade pip
+          # یہاں ہم نے nbconvert ایڈ کر دیا ہے جو فائل خود بدل دے گا
+          pip install moviepy==1.0.3 assemblyai google-generativeai pydub numpy gdown nbconvert
+
+      - name: 📥 Download Video from Google Drive
+        run: |
+          mkdir -p YT_Tool_output/sad_peotry/
+          gdown "https://drive.google.com/uc?id=1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e" -O YT_Tool_Input/sad_peotry/input_video.mp4
+
+      - name: 🔄 Automatically Convert IPYNB to PY File
+        run: |
+          # یہ کمانڈ آپ کی کولیب نوٹ بک کو خود بخود پائتھن فائل (caption_ai.py) میں بدل دے گی
+          # یقینی بنائیں کہ گٹ ہب پر آپ کی فائل کا نام یہی ہو یا نیچے نام تبدیل کر لیں
+          jupyter nbconvert --to script "03_C_Caption_Ai_3.ipynb" --output caption_ai
+
+      - name: 🤖 Run the Caption AI Script
+        env:
+          #ASSEMBLYAI_KEY: ${{ secrets.ASSEMBLYAI_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python caption_ai.py 
+
+      - name: 💾 Upload Final CC Videos
+        uses: actions/upload-artifact@v4
+        with:
+          name: Magic-Caption-Videos
+          path: YT_output_CC/
+          retention-days: 5
