@@ -38,7 +38,7 @@ jobs:
 
       - name: 🔄 Automatically Convert IPYNB to PY File
         run: |
-         jupyter nbconvert --to python "03_C_Caption_Ai_3.ipynb"
+         jupyter nbconvert --to script "03_C_Caption_Ai_3.ipynb"
           mv "03_C_Caption_Ai_3.py" run_captions.py
 
           
