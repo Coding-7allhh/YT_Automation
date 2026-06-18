@@ -1,12 +1,13 @@
 name: RajPut Caption AI Workflow
 
 on:
-  workflow_dispatch: # مینوئل چلانے کا بٹن
   schedule:
-    - cron: '0 9 * * *' # روزانہ صبح 9:00 بجے چلے گا
+    # روزانہ 04:00 UTC (9:00 AM PKT) پر خود بخود چلتا ہے
+    - cron: '0 4 * * *'
+  workflow_dispatch: # آپ کو مینوئل طریقے سے چلانے کے لیے بٹن کلک کرنے کی اجازت دیتا ہے
 
 jobs:
-  run-caption-ai:
+  run-automation:
     runs-on: ubuntu-latest
 
     steps:
