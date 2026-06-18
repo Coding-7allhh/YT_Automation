@@ -28,6 +28,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install supabase google-generativeai "moviepy>=2.0.0" requests
 
+
+      - name: 📥 Download Video from Google Drive
+        run: |
+          mkdir -p YT_output_CC/sad_peotry/
+          gdown "https://drive.google.com/uc?id=1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e" -O YT_output_CC/sad_peotry/input_video.mp4
+    
       - name: Execute Advanced Uploader
         env:
           # Pulls the secure API keys you set up in GitHub Secrets
