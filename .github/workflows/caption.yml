@@ -35,6 +35,9 @@ jobs:
         run: |
           mkdir -p YT_Tool_output/sad_peotry/
           gdown "https://drive.google.com/uc?id=1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e" -O YT_Tool_output/sad_peotry/input_video.mp4
+          gdown "https://drive.google.com/uc?id=12leiHTs5RerU217DwiC1BNbfOLA7eceN" -O downloaded_logo.png
+          gdown "https://drive.google.com/uc?id=1GgAxpDiYLOkv0E_BXjCpbvCr7oH-f_Vt" -O downloaded_outro.mp4
+
 
     #  - name: 🔄 Automatically Convert IPYNB to PY File
       #  run: |
