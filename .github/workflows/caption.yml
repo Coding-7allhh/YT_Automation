@@ -38,8 +38,8 @@ jobs:
 
       - name: 🔄 Automatically Convert IPYNB to PY File
         run: |
-         jupyter nbconvert --to Python "03_C_Caption Ai 3.ipynb"
-          mv "03_C_Caption Ai 3.py" run_captions.py
+         jupyter nbconvert --to python "03_C_Caption_Ai_3.ipynb"
+          mv "03_C_Caption_Ai_3.py" run_captions.py
 
           
       - name: 🤖 Run the Caption AI Script
