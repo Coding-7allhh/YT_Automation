@@ -36,9 +36,9 @@ jobs:
           mkdir -p YT_Tool_output/sad_peotry/
           gdown "https://drive.google.com/uc?id=1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e" -O YT_Tool_output/sad_peotry/input_video.mp4
 
-    #  - name: 🔄 Automatically Convert IPYNB to PY File
-     #   run: |
-       #  jupyter nbconvert --to script "03_C_Caption_Ai_3.ipynb"
+      - name: 🔄 Automatically Convert IPYNB to PY File
+        run: |
+         jupyter nbconvert --to script "03_C_Caption_Ai_3.ipynb"
         #  mv "03_C_Caption_Ai_3.py" run_captions.py
 
           
