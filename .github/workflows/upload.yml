@@ -31,15 +31,15 @@ jobs:
 
       - name: 📥 Download Video from Google Drive
         run: |
-          mkdir -p YT_output_CC/sad_peotry/
-          gdown "https://drive.google.com/uc?id=1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e" -O YT_output_CC/sad_peotry/input_video.mp4
+          mkdir -p YT_output_CCp/sad_peotry/
+         # gdown "https://drive.google.com/uc?id=1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e" -O YT_output_CC/sad_peotry/input_video.mp4
     
       - name: Execute Advanced Uploader
         env:
           # Pulls the secure API keys you set up in GitHub Secrets
-         # SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-         # SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-         # DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python uploader.py
@@ -49,4 +49,4 @@ jobs:
         with:
           name: Generated_Thumbnails
           path: YT_output_CC/thum/
-          retention-days: 5
+          retention-days: 1
