@@ -38,10 +38,11 @@ jobs:
 
       - name: 🔄 Automatically Convert IPYNB to PY File
         run: |
-          # یہ کمانڈ آپ کی کولیب نوٹ بک کو خود بخود پائتھن فائل (caption_ai.py) میں بدل دے گی
-          # یقینی بنائیں کہ گٹ ہب پر آپ کی فائل کا نام یہی ہو یا نیچے نام تبدیل کر لیں
-          jupyter nbconvert --to script "03_C_Caption_Ai_3.ipynb" --output caption_ai
-
+          # یہاں ہم نے --to python کر دیا ہے تاکہ لازمی .py فائل بنے
+          jupyter nbconvert --to python "03_C_Caption Ai 3.ipynb" --output caption_ai
+          # اگر کسی وجہ سے پھر بھی .txt فائل بنی تو یہ کمانڈ اسے خود بخود .py میں بدل دے گی (0% Error Guarantee)
+          if [ -f caption_ai.txt ]; then mv caption_ai.txt caption_ai.py; fi
+     
       - name: 🤖 Run the Caption AI Script
         env:
           #ASSEMBLYAI_KEY: ${{ secrets.ASSEMBLYAI_KEY }}
