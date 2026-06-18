@@ -38,11 +38,10 @@ jobs:
 
       - name: 🔄 Automatically Convert IPYNB to PY File
         run: |
-          # یہاں ہم نے --to python کر دیا ہے تاکہ لازمی .py فائل بنے
-          jupyter nbconvert --to python "03_C_Caption Ai 3.ipynb" --output caption_ai
-          # اگر کسی وجہ سے پھر بھی .txt فائل بنی تو یہ کمانڈ اسے خود بخود .py میں بدل دے گی (0% Error Guarantee)
-          if [ -f caption_ai.txt ]; then mv caption_ai.txt caption_ai.py; fi
-     
+         jupyter nbconvert --to Python "03_C_Caption Ai 3.ipynb"
+          mv "03_C_Caption Ai 3.py" run_captions.py
+
+          
       - name: 🤖 Run the Caption AI Script
         env:
           #ASSEMBLYAI_KEY: ${{ secrets.ASSEMBLYAI_KEY }}
