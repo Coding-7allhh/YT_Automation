@@ -11,8 +11,8 @@ import warnings
 
 # --- کنفیگریشن (Config) ---
 # انوائرنمنٹ ویری ایبلز کو محفوظ طریقے سے GitHub Secrets سے لیا گیا ہے
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://khbkyqgnpvyksqxmcvzl.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "sb_publishable_l5DfqNwsJ-yLliPtNBDv6g_jfUK1CoH")
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 table_name = "Channel_url"
 
 # اہم: YT بلاکنگ سے بچنے کے لیے ایک درست پراکسی (مثلاً http://user:pass@host:port) استعمال کریں
