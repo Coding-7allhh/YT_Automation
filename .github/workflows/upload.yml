@@ -1,9 +1,9 @@
 name: Video Data Engine & Supabase Sync
 
 on:
-  schedule:
+#  schedule:
     # روزانہ 04:00 UTC (9:00 AM PKT) پر خود بخود چلتا ہے
-    - cron: '0 4 * * *'
+ #   - cron: '0 4 * * *'
   workflow_dispatch: # آپ کو مینوئل طریقے سے چلانے کے لیے بٹن کلک کرنے کی اجازت دیتا ہے
 
 jobs:
