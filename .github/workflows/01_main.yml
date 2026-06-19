@@ -38,8 +38,11 @@ jobs:
           
       - name: 📥 Download Video from Google Drive
         run: |
+          mkdir -p YT_Tool_input/sad_peotry/
           mkdir -p YT_Tool_output/sad_peotry/
-          gdown "https://drive.google.com/uc?id=1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e" -O YT_Tool_output/sad_peotry/input_video.mp4
+          mkdir -p YT_output_CC/sad_peotry/
+          
+          gdown "https://drive.google.com/uc?id=1rnzSPJcZzX2wW67RYOc8dUhaKbUHTK3e" -O YT_Tool_input/sad_peotry/input_video.mp4
           gdown "https://drive.google.com/uc?id=12leiHTs5RerU217DwiC1BNbfOLA7eceN" -O downloaded_logo.png
           gdown "https://drive.google.com/uc?id=1GgAxpDiYLOkv0E_BXjCpbvCr7oH-f_Vt" -O downloaded_outro.mp4
       
@@ -51,7 +54,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-         python fetcher.py
+         #python fetcher.py
          python editor.py
          python caption.py
          python uploader.py
