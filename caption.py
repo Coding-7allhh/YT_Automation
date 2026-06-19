@@ -31,6 +31,17 @@ from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, ImageCli
 from moviepy.video.tools.subtitles import SubtitlesClip
 from moviepy.config import change_settings
 
+# Pillow compatibility for different versions: ensure ANTIALIAS / Resampling exist
+# Some Pillow versions removed Image.ANTIALIAS in favor of Image.Resampling.LANCZOS
+try:
+    _ = Image.Resampling
+except Exception:
+    class _Resampling:
+        LANCZOS = getattr(Image, 'LANCZOS', getattr(Image, 'ANTIALIAS', 1))
+    Image.Resampling = _Resampling
+if not hasattr(Image, 'ANTIALIAS'):
+    Image.ANTIALIAS = Image.Resampling.LANCZOS
+
 #change_settings({"IMAGEMAGICK_BINARY": "/usr/bin/convert"})
 
 # ==========================================
