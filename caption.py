@@ -64,6 +64,10 @@ if not os.path.exists(FIXED_LOGO_PATH):
 if not os.path.exists(OUTRO_PATH):
     gdown.download(DRIVE_OUTRO_URL, OUTRO_PATH, quiet=True)
 
+# Debug: show whether downloads succeeded
+print("DEBUG: downloaded_logo exists:", os.path.exists(FIXED_LOGO_PATH))
+print("DEBUG: downloaded_outro exists:", os.path.exists(OUTRO_PATH))
+
 # ==========================================
 # 3. Functions
 # ==========================================
@@ -111,7 +115,9 @@ def generate_english_srt(video_name, duration, max_retries=2):
     return create_fallback_srt(cache_path, duration)
 
 def prepare_full_frame_outro(main_clip, outro_path):
-    if not os.path.exists(outro_path): return None
+    if not os.path.exists(outro_path):
+        print(f"prepare_full_frame_outro: outro file not found: {outro_path}")
+        return None
     try:
         outro = VideoFileClip(outro_path)
         outro_fitted = outro.resize(width=main_clip.w)
@@ -119,11 +125,15 @@ def prepare_full_frame_outro(main_clip, outro_path):
             outro_fitted = outro.resize(height=main_clip.h)
         bg = ColorClip(size=(main_clip.w, main_clip.h), color=(0,0,0)).set_duration(outro.duration)
         return CompositeVideoClip([bg, outro_fitted.set_position('center')]).set_audio(outro.audio)
-    except Exception: return None
+    except Exception as e:
+        print(f"prepare_full_frame_outro error: {e}")
+        return None
 
 def make_magic_growing_logo(video_width, video_height, duration):
     """Creates a circular logo with a multi-color swirl border and smooth pulsing effect."""
-    if not os.path.exists(FIXED_LOGO_PATH): return None
+    if not os.path.exists(FIXED_LOGO_PATH):
+        print(f"make_magic_growing_logo: logo file not found: {FIXED_LOGO_PATH}")
+        return None
     try:
         size = int(video_width * 0.18)
         border_width = int(size * 0.06)
@@ -171,7 +181,9 @@ def make_magic_growing_logo(video_width, video_height, duration):
             return (sx + (tx - sx) * p, sy + (ty - sy) * p)
 
         return logo_clip.set_duration(duration).set_position(pos_func).crossfadein(0.5)
-    except Exception: return None
+    except Exception as e:
+        print(f"make_magic_growing_logo error: {e}")
+        return None
 
 def create_magic_caption_bg(width, height, border_w=4):
     """Generates a magic colorful border background for captions."""
@@ -227,16 +239,23 @@ def run_fast_engine():
                         return CompositeVideoClip([bg_clip, txt.set_position('center')], size=bg_clip.size)
 
                     subs = SubtitlesClip(srt_file, generator)
-                    current_video = CompositeVideoClip([main_clip, subs.set_position(('center', int(main_clip.h * 0.82)))])
+                    current_video = CompositeVideoClip([main_clip, subs.set_position(('center', int(main_clip.h * 0.82)))], size=(main_clip.w, main_clip.h))
                 except Exception as e:
                     print(f"⚠ᄂ Overlay failed: {e}")
 
             logo = make_magic_growing_logo(main_clip.w, main_clip.h, main_clip.duration)
-            if logo: current_video = CompositeVideoClip([current_video, logo])
+            print("DEBUG: logo object:", logo, "duration:", getattr(logo, 'duration', None), "size:", getattr(logo, 'size', None))
+            if logo:
+                # Ensure overlay size matches main clip
+                current_video = CompositeVideoClip([current_video, logo], size=(main_clip.w, main_clip.h))
 
             final_render = current_video
             outro = prepare_full_frame_outro(main_clip, OUTRO_PATH)
-            if outro: final_render = concatenate_videoclips([current_video, outro], method="compose")
+            print("DEBUG: outro object:", outro, "duration:", getattr(outro, 'duration', None), "size:", getattr(outro, 'size', None))
+            if outro:
+                # Make sure outro matches size and fps before concatenation
+                outro = outro.set_fps(24).resize((main_clip.w, main_clip.h))
+                final_render = concatenate_videoclips([current_video.set_fps(24), outro], method="compose")
 
             out_file = os.path.join(out_dir, video_filename)
             final_render.write_videofile(out_file, fps=24, codec="libx264", preset='ultrafast', logger=None)
@@ -247,4 +266,3 @@ def run_fast_engine():
 
 if __name__ == "__main__":
     run_fast_engine()
-
