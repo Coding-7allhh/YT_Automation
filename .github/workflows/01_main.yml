@@ -36,21 +36,20 @@ jobs:
             pip install -r requirements.txt
           fi
           
+      # 3. ٹور پراکسی (Tor Proxy) انسٹال اور اسٹارٹ کرنا (تاکہ آئی پی تبدیل ہو سکے)
       - name: Install and Initialize Tor Proxy
         run: |
-          sudo apt-get update
-          sudo apt-get install -y tor
-          sudo service tor start
-          echo "Tor سروس شروع ہو رہی ہے..."
-        # ٹور کو بیک گراؤنڈ میں مکمل کنیکٹ ہونے کے لیے 20 سیکنڈ کا وقت دیں
-          sleep 20
-          echo "Tor پراکسی کامیابی سے ایکٹیو ہو چکی ہے!"   
-     
+         sudo apt-get update
+         sudo apt-get install -y tor
+         sudo service tor start
+         echo "Tor start ho raha hai..."
+         sleep 20
+         echo "Tor Proxy active ho chuki hai!"
+      
       - name: Execute Downloader Script via Tor & Advanced Clients
-        env:
-        # پورے سسٹم کی ٹریفک کو ٹور پراکسی (SOCKS5) پر فورس کرنا
-        HTTP_PROXY: "socks5://127.0.0.1:9050"
-        HTTPS_PROXY: "socks5://127.0.0.1:9050"     
+        run: |
+          HTTP_PROXY: "socks5://127.0.0.1:9050"
+          HTTPS_PROXY: "socks5://127.0.0.1:9050"     
      
       - name: 📥 Download Video from Google Drive
         run: |
