@@ -46,10 +46,10 @@ jobs:
          sleep 20
          echo "Tor Proxy active ho chuki hai!"
       
-      - name: Execute Downloader Script via Tor & Advanced Clients
-        run: |
-          HTTP_PROXY: "socks5://127.0.0.1:9050"
-          HTTPS_PROXY: "socks5://127.0.0.1:9050"     
+     # - name: Execute Downloader Script via Tor & Advanced Clients
+      #  run: |
+      #    HTTP_PROXY: "socks5://127.0.0.1:9050"
+      #    HTTPS_PROXY: "socks5://127.0.0.1:9050"     
      
       - name: 📥 Download Video from Google Drive
         run: |
