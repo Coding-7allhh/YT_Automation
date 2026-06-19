@@ -1,6 +1,16 @@
-yt-dlp feedparser supabase tqdm requests beautifulsoup4 python-dateutil
-google-generativeai pillow tqdm gdown
-moviepy==1.0.3 assemblyai google-generativeai pydub numpy gdown nbconvert
-supabase google-generativeai "moviepy>=2.0.0" requests gdown
-
-      
+assemblyai
+beautifulsoup4
+feedparser
+gdown
+google-generativeai
+moviepy==1.0.3
+moviepy>=2.0.0
+nbconvert
+numpy
+pillow
+pydub
+python-dateutil
+requests
+supabase
+tqdm
+yt-dlp
