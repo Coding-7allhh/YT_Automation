@@ -3,7 +3,6 @@ beautifulsoup4
 feedparser
 gdown
 google-generativeai
-moviepy==1.0.3
 moviepy>=2.0.0
 nbconvert
 numpy
