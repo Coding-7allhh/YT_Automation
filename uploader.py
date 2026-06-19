@@ -17,7 +17,7 @@ except ImportError:
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY_2")
 
 TABLE_NAME = "viral_reports"
 # Adjusted to match standard GitHub Actions structure (removed 'content/')
