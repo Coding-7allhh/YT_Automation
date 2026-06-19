@@ -37,7 +37,7 @@ from moviepy.config import change_settings
 # 2. Settings
 # ==========================================
 ASSEMBLYAI_KEY = os.environ.get("ASSEMBLYAI_KEY", "YOUR_ASSEMBLYAI_KEY_HERE")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyCQcFsDfnOiFMSR-RJ7ABUOtJvVQc1zbB8")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_KEY_HERE")
 
 aai.settings.api_key = ASSEMBLYAI_KEY
 genai.configure(api_key=GEMINI_API_KEY)
