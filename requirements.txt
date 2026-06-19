@@ -3,7 +3,7 @@ beautifulsoup4
 feedparser
 gdown
 google-generativeai
-moviepy>=2.0.0
+moviepy>=1.0.3
 nbconvert
 numpy
 pillow
