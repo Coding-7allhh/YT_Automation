@@ -62,10 +62,10 @@ def get_youtube_rss_robust(url):
             },
     
     # 3. ڈیٹا سینٹر بلاکنگ سے بچنے کے لیے کوالٹی 720p پر لاک رکھیں
-            'format': 'bestvideo[height<=1000]+bestaudio/best',
+            'format': 'bestvideo[height<=720]+bestaudio/best',
     
     # 4. کلاؤڈ سگنیچر سالور کا استعمال
-            'remote_components': 'ejs:github'
+            'remote_components': 'ejs:github',
             
             'quiet': True, 'no_warnings': True, 'extract_flat': True, 'proxy': PROXY_URL if PROXY_URL and "http" in PROXY_URL else None}
       
