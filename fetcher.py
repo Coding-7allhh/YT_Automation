@@ -49,7 +49,26 @@ def get_video_metadata(video_path):
 def get_youtube_rss_robust(url):
     try:
         if "feeds/videos.xml" in url: return url
-        ydl_opts = {'quiet': True, 'no_warnings': True, 'extract_flat': True, 'proxy': PROXY_URL if PROXY_URL and "http" in PROXY_URL else None}
+        ydl_opts = {
+    # 1. ٹور پراکسی کو کوڈ کے اندر بھی سیٹ کر دیں تاکہ کوئی لیک نہ ہو
+            'proxy': 'socks5://127.0.0.1:9050',
+    
+    # 2. یوٹیوب کو دھوکہ دینے کے لیے محفوظ اور ریل کلائنٹس کا استعمال
+            'extractor_args': {
+                'youtube': {
+                    'player_js_version': ['actual'],
+                    'player_client': ['default', 'web_safari']
+                }
+            },
+    
+    # 3. ڈیٹا سینٹر بلاکنگ سے بچنے کے لیے کوالٹی 720p پر لاک رکھیں
+            'format': 'bestvideo[height<=1000]+bestaudio/best',
+    
+    # 4. کلاؤڈ سگنیچر سالور کا استعمال
+            'remote_components': 'ejs:github'
+            
+            'quiet': True, 'no_warnings': True, 'extract_flat': True, 'proxy': PROXY_URL if PROXY_URL and "http" in PROXY_URL else None}
+      
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             cid = info.get('channel_id') or info.get('id')
