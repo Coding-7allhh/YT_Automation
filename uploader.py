@@ -14,9 +14,9 @@ except ImportError:
 # ==========================================
 # 1. Secure Configuration (Env Variables)
 # ==========================================
-SUPABASE_URL = os.environ.get("SUPABASE_URL","https://khbkyqgnpvyksqxmcvzl.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY","sb_publishable_l5DfqNwsJ-yLliPtNBDv6g_jfUK1CoH")
-DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL","https://discord.com/api/webhooks/1500184991991075007/rwezPR-91qzm_LCqBlzp28fQcx3sLPaN2EvijQIqBgq3k2RGIC-0gEAEtGuEEt9lq3Dm")
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 TABLE_NAME = "viral_reports"
