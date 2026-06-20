@@ -93,6 +93,138 @@ def make_shorts_with_blur(video_path, category_name):
         return True
     except: return False
 
+# --- Multi-Site Fallback Download Function ---
+def download_video_with_fallback(video_url, output_path, category_name):
+    """
+    Sequential fallback mechanism: yt-dlp → Cobalt → SaveFrom → Coar.is
+    Returns True if successful, False otherwise.
+    """
+    
+    # Step 1: Try native yt-dlp
+    print(f"    [Step 1] Attempting yt-dlp download...")
+    try:
+        ydl_opts = {
+            'outtmpl': output_path,
+            'format': 'mp4',
+            'quiet': True,
+            'proxy': PROXY_URL if PROXY_URL and "http" in PROXY_URL else None
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_url, download=True)
+            tmp = ydl.prepare_filename(info)
+        print(f"    ✅ yt-dlp succeeded")
+        return tmp
+    except Exception as e:
+        print(f"    ❌ yt-dlp failed: {str(e)[:80]}")
+    
+    # Step 2: Fallback to Cobalt Public API
+    print(f"    [Step 2] Attempting Cobalt API fallback...")
+    try:
+        headers = {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        payload = {
+            "url": video_url,
+            "vQuality": "720"
+        }
+        response = requests.post(
+            'https://api.cobalt.tools/api/json',
+            json=payload,
+            headers=headers,
+            timeout=30
+        )
+        response.raise_for_status()
+        data = response.json()
+        
+        if data.get('status') == 'success' and data.get('url'):
+            download_url = data['url']
+            return _stream_download_video(download_url, output_path)
+    except Exception as e:
+        print(f"    ❌ Cobalt failed: {str(e)[:80]}")
+    
+    # Step 3: Fallback to SaveFrom.net Worker API
+    print(f"    [Step 3] Attempting SaveFrom.net fallback...")
+    try:
+        payload = {
+            'url': video_url,
+            'current_url': video_url
+        }
+        response = requests.post(
+            'https://worker.sf-api.com/savefrom.php',
+            data=payload,
+            timeout=30,
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        )
+        response.raise_for_status()
+        
+        # Parse direct MP4 stream URL using regex
+        match = re.search(r'https?://[^\s"<>]+\.mp4[^\s"<>]*', response.text)
+        if match:
+            download_url = match.group(0)
+            return _stream_download_video(download_url, output_path)
+    except Exception as e:
+        print(f"    ❌ SaveFrom failed: {str(e)[:80]}")
+    
+    # Step 4: Fallback to Coar.is API
+    print(f"    [Step 4] Attempting Coar.is API fallback...")
+    try:
+        response = requests.get(
+            f'https://coar.is/api/download?url={requests.utils.quote(video_url)}',
+            timeout=30,
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        )
+        response.raise_for_status()
+        data = response.json()
+        
+        if data.get('success') and data.get('url'):
+            download_url = data['url']
+            return _stream_download_video(download_url, output_path)
+    except Exception as e:
+        print(f"    ❌ Coar.is failed: {str(e)[:80]}")
+    
+    # All fallbacks exhausted
+    print(f"    ❌ All fallback methods failed")
+    return None
+
+def _stream_download_video(download_url, output_path):
+    """
+    Stream-download video in chunks to prevent memory lag.
+    Returns the final file path on success, None on failure.
+    """
+    try:
+        response = requests.get(
+            download_url,
+            timeout=60,
+            stream=True,
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        )
+        response.raise_for_status()
+        
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        # Stream download in 8KB chunks
+        with open(output_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+        
+        # Verify file exists and has content
+        if os.path.getsize(output_path) > 0:
+            print(f"    ✅ Stream download succeeded ({os.path.getsize(output_path)} bytes)")
+            return output_path
+        else:
+            os.remove(output_path)
+            return None
+    except Exception as e:
+        print(f"    ❌ Stream download failed: {str(e)[:80]}")
+        if os.path.exists(output_path):
+            try:
+                os.remove(output_path)
+            except:
+                pass
+        return None
+
 def run_batch_process():
     if supabase is None: return
     try:
@@ -119,26 +251,32 @@ def run_batch_process():
                 if not rss: continue
 
                 feed = feedparser.parse(rss)
-                ydl_opts = {'outtmpl': os.path.join(os.getcwd(), f'vid_%(id)s_{cat}.mp4'), 'format': 'mp4', 'quiet': True, 'proxy': PROXY_URL if PROXY_URL and "http" in PROXY_URL else None}
 
                 for entry in feed.entries:
                     pub = parser.parse(entry.published).astimezone(timezone.utc)
                     if pub > last_run_dt:
                         print(f"  ⬆️ New video: {entry.title}")
-                        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                            info = ydl.extract_info(entry.link, download=True)
-                            tmp = ydl.prepare_filename(info)
-
-                        dur, ratio = get_video_metadata(tmp)
-                        if ratio == "9:16":
-                            dest = os.path.join(base_dir, cat)
-                            os.makedirs(dest, exist_ok=True)
-                            shutil.move(tmp, os.path.join(dest, os.path.basename(tmp)))
+                        
+                        # Generate output path matching original template
+                        video_id = entry.link.split('v=')[-1].split('&')[0] if 'v=' in entry.link else entry.link.split('/')[-1]
+                        output_path = os.path.join(os.getcwd(), f'vid_{video_id}_{cat}.mp4')
+                        
+                        # Use multi-fallback downloader
+                        tmp = download_video_with_fallback(entry.link, output_path, cat)
+                        
+                        if tmp and os.path.exists(tmp):
+                            dur, ratio = get_video_metadata(tmp)
+                            if ratio == "9:16":
+                                dest = os.path.join(base_dir, cat)
+                                os.makedirs(dest, exist_ok=True)
+                                shutil.move(tmp, os.path.join(dest, os.path.basename(tmp)))
+                            else:
+                                make_shorts_with_blur(tmp, cat)
+                                b_dest = os.path.join(blogger_dir, cat)
+                                os.makedirs(b_dest, exist_ok=True)
+                                shutil.move(tmp, os.path.join(b_dest, os.path.basename(tmp)))
                         else:
-                            make_shorts_with_blur(tmp, cat)
-                            b_dest = os.path.join(blogger_dir, cat)
-                            os.makedirs(b_dest, exist_ok=True)
-                            shutil.move(tmp, os.path.join(b_dest, os.path.basename(tmp)))
+                            print(f"  ❌ Failed to download video after all fallbacks")
 
             supabase.table(table_name).update({last_run_col: datetime.now(timezone.utc).isoformat()}).eq(id_col, row_id).execute()
     except Exception as e: print(f"Error: {e}")
