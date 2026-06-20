@@ -59,10 +59,10 @@ OUTPUT_BASE_DIR = "YT_output_CC"
 LOGOS_BASE_DIR = "BG music/logo_img"
 SRT_CACHE_DIR = "SRT_Cache"
 
-DRIVE_LOGO_URL = "https://drive.google.com/uc?id=12leiHTs5RerU217DwiC1BNbfOLA7eceN"
+# Google Drive folder ID containing all logos
+DRIVE_LOGOS_FOLDER_ID = "1bt00qzL87Z5i4CLtuFUixzQASIyDybNj"
 DRIVE_OUTRO_URL = "https://drive.google.com/uc?id=1GgAxpDiYLOkv0E_BXjCpbvCr7oH-f_Vt"
 
-FIXED_LOGO_PATH = "downloaded_logo.png"
 OUTRO_PATH = "downloaded_outro.mp4"
 
 os.makedirs(BASE_DIR, exist_ok=True)
@@ -70,18 +70,60 @@ os.makedirs(OUTPUT_BASE_DIR, exist_ok=True)
 os.makedirs(LOGOS_BASE_DIR, exist_ok=True)
 os.makedirs(SRT_CACHE_DIR, exist_ok=True)
 
-if not os.path.exists(FIXED_LOGO_PATH):
-    gdown.download(DRIVE_LOGO_URL, FIXED_LOGO_PATH, quiet=True)
 if not os.path.exists(OUTRO_PATH):
     gdown.download(DRIVE_OUTRO_URL, OUTRO_PATH, quiet=True)
 
 # Debug: show whether downloads succeeded
-print("DEBUG: downloaded_logo exists:", os.path.exists(FIXED_LOGO_PATH))
 print("DEBUG: downloaded_outro exists:", os.path.exists(OUTRO_PATH))
 
 # ==========================================
 # 3. Functions
 # ==========================================
+
+def get_logo_from_drive(folder_id, logo_name):
+    """
+    Downloads a logo from Google Drive folder by name.
+    Returns the local path if found, None otherwise.
+    """
+    try:
+        # Use gdown to list and download files from folder
+        logo_path = os.path.join(LOGOS_BASE_DIR, f"{logo_name}.png")
+        
+        # Check if logo already exists locally
+        if os.path.exists(logo_path):
+            print(f"♻ᄂ Using cached logo: {logo_name}")
+            return logo_path
+        
+        # Try downloading from Drive folder
+        # Format: https://drive.google.com/drive/folders/FOLDER_ID
+        drive_folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
+        
+        print(f"ጡ Attempting to download logo: {logo_name}")
+        
+        # Use gdown to download from folder - it will attempt to find the file
+        try:
+            gdown.download_folder(drive_folder_url, output=LOGOS_BASE_DIR, quiet=True)
+            
+            # Look for the logo file after download
+            possible_paths = [
+                logo_path,
+                os.path.join(LOGOS_BASE_DIR, f"{logo_name}"),
+                os.path.join(LOGOS_BASE_DIR, f"{logo_name}.jpg"),
+                os.path.join(LOGOS_BASE_DIR, f"{logo_name}.jpeg")
+            ]
+            
+            for path in possible_paths:
+                if os.path.exists(path):
+                    print(f"✅ Logo found: {path}")
+                    return path
+        except Exception as e:
+            print(f"⚠ᄂ Folder download failed: {e}")
+        
+        print(f"❌ Logo not found: {logo_name}")
+        return None
+    except Exception as e:
+        print(f"⚠ᄂ Error downloading logo: {e}")
+        return None
 
 def create_fallback_srt(path, duration):
     """Creates a dummy English SRT if the API fails."""
@@ -140,10 +182,10 @@ def prepare_full_frame_outro(main_clip, outro_path):
         print(f"prepare_full_frame_outro error: {e}")
         return None
 
-def make_magic_growing_logo(video_width, video_height, duration):
+def make_magic_growing_logo(video_width, video_height, duration, logo_path):
     """Creates a circular logo with a multi-color swirl border and smooth pulsing effect."""
-    if not os.path.exists(FIXED_LOGO_PATH):
-        print(f"make_magic_growing_logo: logo file not found: {FIXED_LOGO_PATH}")
+    if not os.path.exists(logo_path):
+        print(f"make_magic_growing_logo: logo file not found: {logo_path}")
         return None
     try:
         size = int(video_width * 0.18)
@@ -151,7 +193,7 @@ def make_magic_growing_logo(video_width, video_height, duration):
         b_size = size + 2 * border_width
         temp_logo_path = "temp_magic_logo.png"
 
-        logo_img = Image.open(FIXED_LOGO_PATH).convert("RGBA")
+        logo_img = Image.open(logo_path).convert("RGBA")
         w, h = logo_img.size
         min_dim = min(w, h)
         logo_img = logo_img.crop(((w-min_dim)//2, (h-min_dim)//2, (w+min_dim)//2, (h+min_dim)//2)).resize((size, size), Image.Resampling.LANCZOS)
@@ -224,7 +266,12 @@ def run_fast_engine():
         out_dir = os.path.join(OUTPUT_BASE_DIR, os.path.dirname(rel_path))
         os.makedirs(out_dir, exist_ok=True)
 
+        # Get parent folder name to use as logo name
+        parent_folder = os.path.basename(os.path.dirname(video_path))
+        
         print(f"\nፁ Processing: {rel_path}")
+        print(f"ጡ Parent folder (logo name): {parent_folder}")
+        
         try:
             main_clip = VideoFileClip(video_path)
             srt_file = generate_english_srt(video_filename, main_clip.duration)
@@ -254,11 +301,17 @@ def run_fast_engine():
                 except Exception as e:
                     print(f"⚠ᄂ Overlay failed: {e}")
 
-            logo = make_magic_growing_logo(main_clip.w, main_clip.h, main_clip.duration)
-            print("DEBUG: logo object:", logo, "duration:", getattr(logo, 'duration', None), "size:", getattr(logo, 'size', None))
-            if logo:
-                # Ensure overlay size matches main clip
-                current_video = CompositeVideoClip([current_video, logo], size=(main_clip.w, main_clip.h))
+            # Download and use logo based on parent folder name
+            logo_path = get_logo_from_drive(DRIVE_LOGOS_FOLDER_ID, parent_folder)
+            
+            if logo_path:
+                logo = make_magic_growing_logo(main_clip.w, main_clip.h, main_clip.duration, logo_path)
+                print("DEBUG: logo object:", logo, "duration:", getattr(logo, 'duration', None), "size:", getattr(logo, 'size', None))
+                if logo:
+                    # Ensure overlay size matches main clip
+                    current_video = CompositeVideoClip([current_video, logo], size=(main_clip.w, main_clip.h))
+            else:
+                print(f"⚠ᄂ Logo not found for folder: {parent_folder}")
 
             final_render = current_video
             outro = prepare_full_frame_outro(main_clip, OUTRO_PATH)
