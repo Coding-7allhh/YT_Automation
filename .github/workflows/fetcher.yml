@@ -41,7 +41,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          YT_PROXY: ${{ secrets.YT_PROXY }}
+        #  YT_PROXY: ${{ secrets.YT_PROXY }}
         run: python fetcher.py
 
       - name: 💾 Upload Processed Videos as Artifacts
