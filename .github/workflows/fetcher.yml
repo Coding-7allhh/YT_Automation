@@ -20,7 +20,7 @@ on:
 jobs:
   fetch-and-organize:
     runs-on: ubuntu-latest
- #   timeout-minutes: 30
+    timeout-minutes: 530
     
     permissions:
       contents: read
