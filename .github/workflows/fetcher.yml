@@ -1,157 +1,76 @@
-name: YT Automation Fetcher
+name: 📥 Fetch & Organize YouTube Assets
 
 on:
-  # Manual trigger
-  workflow_dispatch:
-    inputs:
-      cleanup:
-        description: 'Clean up old artifacts after run'
-        required: false
-        default: 'true'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
-  
-  # Scheduled runs (daily at 2 AM UTC)
- # schedule:
-  #  - cron: '0 2 * * *'
+  workflow_dispatch: # Allows you to manually trigger this workflow from the GitHub UI
 
 jobs:
-  fetch-and-organize:
+  process-drive-assets:
     runs-on: ubuntu-latest
-    timeout-minutes: 530
-    
-    permissions:
-      contents: read
-      artifacts: write
-    
+    name: 🎬 Process & Upload Drive Assets
+
     steps:
-      # Step 1: Checkout repository
-      - name: Checkout repository
+      - name: 📦 Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      # Step 2: Set up Python environment
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+      - name: 🐍 Setup Python 3.10
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: '3.10'
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
+      - name: ⚙️ Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install gdown requests urllib3
+          pip install gdown
 
-      # Step 4: Create timestamp for logging
-      - name: Generate timestamp
-        id: timestamp
-        run: echo "date=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
-
-      # Step 5: Run fetcher script
-      - name: Run YT Automation Fetcher
-        id: fetcher
+      - name: 🚀 Run Fetcher Script
+        id: run_script
         run: |
-          python fetcher.py 2>&1 | tee fetcher_${{ steps.timestamp.outputs.date }}.log
-        continue-on-error: true
+          # Run the python script and pipe output to a log file for the UI summary
+          python fetcher.py | tee script_execution.log
 
-      # Step 6: Check if output folder exists
-      - name: Verify output directory
-        id: verify
-        run: |
-          if [ -d "YT_Tool_Input" ]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            find YT_Tool_Input -type f | wc -l > file_count.txt
-            du -sh YT_Tool_Input > folder_size.txt
-            cat file_count.txt
-            cat folder_size.txt
-          else
-            echo "status=empty" >> $GITHUB_OUTPUT
-            echo "0" > file_count.txt
-            echo "0B" > folder_size.txt
-          fi
-
-      # Step 7: Create artifact summary
-      - name: Generate artifact summary
-        if: steps.verify.outputs.status == 'success'
-        run: |
-          cat > artifact_summary.md << 'EOF'
-          # YT Automation Fetcher Report
-          
-          **Run Date:** ${{ steps.timestamp.outputs.date }}
-          **Status:** ✅ Success
-          
-          ## Statistics
-          - **Files Processed:** $(cat file_count.txt)
-          - **Total Size:** $(cat folder_size.txt)
-          - **Execution Time:** Check workflow logs
-          
-          ## Output Structure
-          ```
-          YT_Tool_Input/
-          ├── [Category]/
-          │   ├── YT_Video/
-          │   │   └── [organized_videos].mp4
-          │   └── JSON/
-          │       └── [video_metadata].json
-          ```
-          
-          **Download artifacts to access organized files.**
-          EOF
-          cat artifact_summary.md
-
-      # Step 8: Upload organized files as artifact
-      - name: Upload YT_Tool_Input folder
-        if: steps.verify.outputs.status == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: yt-tool-input-${{ steps.timestamp.outputs.date }}
-          path: YT_Tool_Input/
-          retention-days: 30
-          if-no-files-found: warn
-
-      # Step 9: Upload logs as artifact
-      - name: Upload execution logs
+      - name: 📊 Generate UI Dashboard (Job Summary)
         if: always()
+        run: |
+          echo "## 🎬 YouTube Assets Processing Report" >> $GITHUB_STEP_SUMMARY
+          echo "Your Google Drive fetcher script has finished executing. Here is the breakdown of the processed files." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 📂 Organized Files Status" >> $GITHUB_STEP_SUMMARY
+          echo "| Category | 🎞️ Videos | 📄 JSONs |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|----------|---------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Bash logic to scan the output directory and populate the UI table
+          if [ -d "YT_Tool_Input" ]; then
+            for category_path in YT_Tool_Input/*/; do
+              if [ -d "$category_path" ]; then
+                category=$(basename "$category_path")
+                videos=$(find "$category_path/YT_Video" -name "*.mp4" 2>/dev/null | wc -l || echo 0)
+                jsons=$(find "$category_path/JSON" -name "*.json" 2>/dev/null | wc -l || echo 0)
+                echo "| **$category** | $videos | $jsons |" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+          else
+            echo "| ❌ Processing Failed / No Outputs | 0 | 0 |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📜 Terminal Execution Log" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Click to expand terminal output</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
+          cat script_execution.log >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Task Completed!** If files were successfully generated, scroll down to the **Artifacts** section below to download them." >> $GITHUB_STEP_SUMMARY
+
+      - name: 💾 Upload Organized Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fetcher-logs-${{ steps.timestamp.outputs.date }}
-          path: |
-            fetcher_*.log
-            artifact_summary.md
-            file_count.txt
-            folder_size.txt
-          retention-days: 30
-          if-no-files-found: ignore
-
-      # Step 10: Notify on success
-      - name: Success notification
-        if: steps.verify.outputs.status == 'success'
-        run: |
-          echo "✅ YT Automation Fetcher completed successfully!"
-          echo "📊 Files processed: $(cat file_count.txt)"
-          echo "📦 Artifact size: $(cat folder_size.txt)"
-
-      # Step 11: Notify on failure
-      - name: Failure notification
-        if: failure() || steps.verify.outputs.status == 'empty'
-        run: |
-          echo "❌ YT Automation Fetcher encountered issues"
-          echo "Check the logs for details"
-
-  # Optional: Clean up old artifacts
-  cleanup-artifacts:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.cleanup == 'true'
-    runs-on: ubuntu-latest
-    needs: fetch-and-organize
-    steps:
-      - name: Delete artifacts older than 30 days
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: |
-            yt-tool-input-*
-            fetcher-logs-*
-          minCreatedDays: 7
+          name: Organized-YT-Assets
+          path: YT_Tool_Input/
+          retention-days: 7 # The zip file will be available to download for 7 days
+          if-no-files-found: warn
